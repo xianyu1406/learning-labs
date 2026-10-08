@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>学习实验室</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;color:#172c39;background:#f4f6f8;line-height:1.65}
+    body{margin:0}main{max-width:1060px;margin:auto;padding:64px 24px}h1{font-size:clamp(2rem,5vw,3rem);margin:8px 0 16px;line-height:1.2}.eyebrow{font-weight:700;color:#52766d;letter-spacing:.15em}.intro{max-width:650px;color:#526471;font-size:1.1rem}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:40px 0}article{display:flex;flex-direction:column;border:1px solid #dce4e8;border-radius:16px;background:white;padding:28px;box-shadow:0 8px 24px #17354c06}.number{font-size:.8rem;letter-spacing:.1em;color:#65817c;font-weight:700}h2{font-size:1.4rem;line-height:1.4;margin:14px 0 8px}article p{color:#526471;margin:0 0 24px}a{margin-top:auto;display:inline-block;color:#125e50;font-weight:700;text-underline-offset:4px}a:focus-visible{outline:3px solid #bd8434;outline-offset:5px;border-radius:2px}.note{color:#61717a;font-size:.92rem;border-top:1px solid #dce4e8;padding-top:24px}@media(max-width:760px){main{padding:36px 20px}.cards{grid-template-columns:1fr;margin-top:28px}article{padding:24px}}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">LEARNING LABS</div>
+    <h1>从理解到亲手实验</h1>
+    <p class="intro">选择一个实验室，跟着具体例子学习，再用代码、计算和自己的解释检验理解。可以自由浏览，也可以从第一单元开始。</p>
+    <section class="cards" aria-label="三个学习实验室">
+      <article>
+        <div class="number">01 / 象棋与算法</div>
+        <h2>中国象棋 AI 编程</h2>
+        <p>从棋盘坐标、棋子规则到 minimax 和 alpha-beta。亲手填写 Python，操作棋盘，核对真实搜索过程。</p>
+        <a href="xiangqi/">进入象棋实验室 →</a>
+      </article>
+      <article>
+        <div class="number">02 / 数学与深度学习</div>
+        <h2>从线性回归读懂 AniDoc</h2>
+        <p>通过公式、图形和小实验连接基础数学、神经网络与论文结构。先补概念，再逐步阅读。</p>
+        <a href="anidoc/">进入 AniDoc 实验室 →</a>
+      </article>
+      <article>
+        <div class="number">03 / 视觉与论文</div>
+        <h2>计算机视觉论文学习</h2>
+        <p>从经典视觉方法走向核心论文。观察真实小模型训练，用读数、反例和迁移题检验理解。</p>
+        <a href="vision/">进入视觉实验室 →</a>
+      </article>
+    </section>
+    <p class="note">学习记录保存在当前浏览器；需要换设备时，请使用各实验室的导出与导入功能。首次运行象棋 Python 会加载约 13 MB 的资源。</p>
+  </main>
+</body>
+</html>

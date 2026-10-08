@@ -1,0 +1,3092 @@
+{
+  "schemaVersion": 1,
+  "titleZh": "象棋基础规则与30个原创教学局面",
+  "coordinateSystem": {
+    "x": "0..8, left to right as red sees the board",
+    "y": "0..9, top to bottom",
+    "redForwardDy": -1,
+    "blackForwardDy": 1,
+    "empty": ".",
+    "redPalace": {
+      "x": [
+        3,
+        5
+      ],
+      "y": [
+        7,
+        9
+      ]
+    },
+    "blackPalace": {
+      "x": [
+        3,
+        5
+      ],
+      "y": [
+        0,
+        2
+      ]
+    },
+    "riverBetweenY": [
+      4,
+      5
+    ],
+    "redCrossedRiver": "y <= 4",
+    "blackCrossedRiver": "y >= 5",
+    "notation": "Array coordinates, not traditional Chinese move notation"
+  },
+  "pieceCodes": {
+    "K": "帅",
+    "A": "仕",
+    "E": "相",
+    "H": "马",
+    "R": "车",
+    "C": "炮",
+    "P": "兵",
+    "k": "将",
+    "a": "士",
+    "e": "象",
+    "h": "马",
+    "r": "车",
+    "c": "炮",
+    "p": "卒"
+  },
+  "rulesSummaryZh": [
+    "帅/将：九宫内正交一步。仕/士：九宫斜线一步。",
+    "相/象：对角线两步，相眼为空，不可过河。马：日字步，先直一步的马腿须为空。",
+    "车：横竖直行，不能穿子。炮：不吃子时同车；吃子时恰隔一子，炮架颜色不限。",
+    "兵/卒：前进一步；过河后可横走一步，永不后退、没有升变。",
+    "所有棋子不能吃己子；走后不能让己方将帅受攻击或照面。",
+    "无合法着法即负，包含将死和困毙；正常合法对局不执行吃将。"
+  ],
+  "firstReleaseBoundaryZh": "本版实现基本走子、吃子、将军、将帅照面、自将过滤，以及将死/困毙判负。用于短局面教学与有限深度搜索；不宣称为完整竞赛裁判。暂不裁定长将、长捉、循环重复、自然限着或其他和棋与赛事处罚规则。搜索遇到深度/节点上限只报告未搜完或当前估值，不能当作正式和棋。",
+  "implementationNotes": [
+    "Separate pseudo-legal geometry from final own-general safety filtering.",
+    "Use king-to-king open-file attacks internally; reject king captures in the playable legal move list.",
+    "Perform terminal no-legal-move detection before depth-zero static evaluation.",
+    "Freshly evaluate cannon screens and horse legs after every simulated move.",
+    "Do not call a bounded search proven unless it completes the required tree or a verified result is reached.",
+    "An assertion with side overrides the fixture sideToMove only for a clearly labelled comparison, as in fixture 10.",
+    "Fixtures are original compositions, not published game records or proofs of reachability."
+  ],
+  "sources": [
+    {
+      "id": "WXF2018",
+      "title": "World Xiangqi Rules (2018), official World Xiangqi Federation PDF",
+      "url": "https://www.wxf-xiangqi.org/images/wxf-rules/2018_World_XiangQi_Rules_English2018.pdf",
+      "verified": "2026-09-30",
+      "sections": [
+        "2.1–2.7: movement (printed pp. 3–5; PDF pp. 11–13)",
+        "2.8: capture and friendly occupancy; kings not captured (printed p. 5; PDF p. 13)",
+        "2.9: facing generals (printed p. 5; PDF p. 13)",
+        "2.10: check and responses (printed pp. 5–6; PDF pp. 13–14)",
+        "2.11 and 3.1.A.I–II: checkmate and stalemate loss (printed p. 6; PDF p. 14)"
+      ],
+      "verificationMethod": "Official PDF downloaded and printed pages 3–6 visually inspected"
+    },
+    {
+      "id": "WXF_INTRO2015",
+      "title": "Introduction to Chinese Chess (XiangQi) for International Chess Players, WXF-hosted teaching book",
+      "url": "https://www.wxf-xiangqi.org/images/free_download_books/xiangqi_introduction_chessplayers_20150323.pdf",
+      "verified": "2026-09-30",
+      "sections": [
+        "Chapter 4: basic result and game rules",
+        "Chapter 5: seven piece movements"
+      ],
+      "note": "Teaching corroboration; official 2018 rulebook is the normative source"
+    },
+    {
+      "id": "WXF_RULES_INDEX",
+      "title": "World Xiangqi Rules — World Xiangqi Federation",
+      "url": "https://www.wxf-xiangqi.org/index.php?Itemid=291&id=269&lang=en&option=com_content&view=article",
+      "verified": "2026-09-30"
+    }
+  ],
+  "baseline": {
+    "id": "standard-start",
+    "sideToMove": "red",
+    "board": [
+      "rheakaehr",
+      ".........",
+      ".c.....c.",
+      "p.p.p.p.p",
+      ".........",
+      ".........",
+      "P.P.P.P.P",
+      ".C.....C.",
+      ".........",
+      "RHEAKAEHR"
+    ],
+    "expectedLegalMoveCount": 44
+  },
+  "fixtures": [
+    {
+      "id": "01-general-palace",
+      "titleZh": "帅的九宫格",
+      "purposeZh": "区别正交一步、斜走与出宫",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          5,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            5,
+            9
+          ],
+          "to": [
+            4,
+            9
+          ],
+          "legal": true,
+          "whyZh": "宫内横走一步",
+          "givesCheck": false,
+          "pieceAfter": "K"
+        },
+        {
+          "from": [
+            5,
+            9
+          ],
+          "to": [
+            5,
+            8
+          ],
+          "legal": true,
+          "whyZh": "宫内前进一步",
+          "givesCheck": false,
+          "pieceAfter": "K"
+        },
+        {
+          "from": [
+            5,
+            9
+          ],
+          "to": [
+            6,
+            9
+          ],
+          "legal": false,
+          "whyZh": "目的地在九宫外"
+        },
+        {
+          "from": [
+            5,
+            9
+          ],
+          "to": [
+            4,
+            8
+          ],
+          "legal": false,
+          "whyZh": "帅不能斜走"
+        },
+        {
+          "from": [
+            5,
+            9
+          ],
+          "to": [
+            5,
+            7
+          ],
+          "legal": false,
+          "whyZh": "一次只能走一步"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 2,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".....K..."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "02-advisor-diagonal",
+      "titleZh": "仕走斜线",
+      "purposeZh": "识别仕的一步斜行与九宫边界",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "A",
+          3,
+          9
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            3,
+            9
+          ],
+          "to": [
+            4,
+            8
+          ],
+          "legal": true,
+          "whyZh": "沿九宫斜线走一步",
+          "givesCheck": false,
+          "pieceAfter": "A"
+        },
+        {
+          "from": [
+            3,
+            9
+          ],
+          "to": [
+            2,
+            8
+          ],
+          "legal": false,
+          "whyZh": "不能出九宫"
+        },
+        {
+          "from": [
+            3,
+            9
+          ],
+          "to": [
+            3,
+            8
+          ],
+          "legal": false,
+          "whyZh": "仕不能直走"
+        },
+        {
+          "from": [
+            3,
+            9
+          ],
+          "to": [
+            5,
+            7
+          ],
+          "legal": false,
+          "whyZh": "不能一次连走两步"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 3,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "...AK...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "03-elephant-open",
+      "titleZh": "相飞田字",
+      "purposeZh": "相恰走两格对角线",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "E",
+          2,
+          9
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            2,
+            9
+          ],
+          "to": [
+            0,
+            7
+          ],
+          "legal": true,
+          "whyZh": "相眼空且仍在己方半场",
+          "givesCheck": false,
+          "pieceAfter": "E"
+        },
+        {
+          "from": [
+            2,
+            9
+          ],
+          "to": [
+            4,
+            7
+          ],
+          "legal": true,
+          "whyZh": "相眼空且仍在己方半场",
+          "givesCheck": false,
+          "pieceAfter": "E"
+        },
+        {
+          "from": [
+            2,
+            9
+          ],
+          "to": [
+            3,
+            8
+          ],
+          "legal": false,
+          "whyZh": "相不是斜走一步"
+        },
+        {
+          "from": [
+            2,
+            9
+          ],
+          "to": [
+            6,
+            5
+          ],
+          "legal": false,
+          "whyZh": "相不能沿斜线任意远走"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 4,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "..E.K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "04-elephant-friendly-eye",
+      "titleZh": "己子也能塞相眼",
+      "purposeZh": "相眼不能被己方棋子占据",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "E",
+          2,
+          9
+        ],
+        [
+          "H",
+          3,
+          8
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            2,
+            9
+          ],
+          "to": [
+            4,
+            7
+          ],
+          "legal": false,
+          "whyZh": "己方马占据相眼(3,8)"
+        },
+        {
+          "from": [
+            2,
+            9
+          ],
+          "to": [
+            0,
+            7
+          ],
+          "legal": true,
+          "whyZh": "另一侧相眼(1,8)空着",
+          "givesCheck": false,
+          "pieceAfter": "E"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 10,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "...H.....",
+        "..E.K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "05-elephant-enemy-eye",
+      "titleZh": "敌子同样塞相眼",
+      "purposeZh": "相不能跳过敌子，不能吃相眼上的子",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "E",
+          2,
+          9
+        ],
+        [
+          "p",
+          3,
+          8
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            2,
+            9
+          ],
+          "to": [
+            4,
+            7
+          ],
+          "legal": false,
+          "whyZh": "黑卒占据相眼(3,8)"
+        },
+        {
+          "from": [
+            2,
+            9
+          ],
+          "to": [
+            3,
+            8
+          ],
+          "legal": false,
+          "whyZh": "相不能斜走一步吃掉塞眼卒"
+        },
+        {
+          "from": [
+            2,
+            9
+          ],
+          "to": [
+            0,
+            7
+          ],
+          "legal": true,
+          "whyZh": "另一条田字路通畅",
+          "givesCheck": false,
+          "pieceAfter": "E"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 2,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "...p.....",
+        "..E.K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "06-elephant-river",
+      "titleZh": "相不过河",
+      "purposeZh": "区分田字形状正确与河界限制",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "E",
+          2,
+          5
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            4,
+            3
+          ],
+          "legal": false,
+          "whyZh": "目的地越过河界"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            0,
+            3
+          ],
+          "legal": false,
+          "whyZh": "目的地越过河界"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            4,
+            7
+          ],
+          "legal": true,
+          "whyZh": "向后飞相仍在己方半场",
+          "givesCheck": false,
+          "pieceAfter": "E"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            0,
+            7
+          ],
+          "legal": true,
+          "whyZh": "向后飞相仍在己方半场",
+          "givesCheck": false,
+          "pieceAfter": "E"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 4,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "..E......",
+        ".........",
+        ".........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "07-horse-open",
+      "titleZh": "马的八个落点",
+      "purposeZh": "马走日字，空旷中心最多有八个落点",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "H",
+          2,
+          5
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            0,
+            4
+          ],
+          "legal": true,
+          "whyZh": "日字形且对应马腿为空",
+          "givesCheck": false,
+          "pieceAfter": "H"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            0,
+            6
+          ],
+          "legal": true,
+          "whyZh": "日字形且对应马腿为空",
+          "givesCheck": false,
+          "pieceAfter": "H"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            1,
+            3
+          ],
+          "legal": true,
+          "whyZh": "日字形且对应马腿为空",
+          "givesCheck": false,
+          "pieceAfter": "H"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            1,
+            7
+          ],
+          "legal": true,
+          "whyZh": "日字形且对应马腿为空",
+          "givesCheck": false,
+          "pieceAfter": "H"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            3,
+            3
+          ],
+          "legal": true,
+          "whyZh": "日字形且对应马腿为空",
+          "givesCheck": false,
+          "pieceAfter": "H"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            3,
+            7
+          ],
+          "legal": true,
+          "whyZh": "日字形且对应马腿为空",
+          "givesCheck": false,
+          "pieceAfter": "H"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            4,
+            4
+          ],
+          "legal": true,
+          "whyZh": "日字形且对应马腿为空",
+          "givesCheck": false,
+          "pieceAfter": "H"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            4,
+            6
+          ],
+          "legal": true,
+          "whyZh": "日字形且对应马腿为空",
+          "givesCheck": false,
+          "pieceAfter": "H"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            3,
+            6
+          ],
+          "legal": false,
+          "whyZh": "只斜走一步不是马步"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 10,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "..H......",
+        ".........",
+        ".........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "08-horse-friendly-leg",
+      "titleZh": "己子蹩马腿",
+      "purposeZh": "同一个马腿能封住两个方向",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "H",
+          2,
+          7
+        ],
+        [
+          "P",
+          2,
+          6
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            2,
+            7
+          ],
+          "to": [
+            1,
+            5
+          ],
+          "legal": false,
+          "whyZh": "前方马腿(2,6)被己兵占据"
+        },
+        {
+          "from": [
+            2,
+            7
+          ],
+          "to": [
+            3,
+            5
+          ],
+          "legal": false,
+          "whyZh": "同一马腿同时封住另一落点"
+        },
+        {
+          "from": [
+            2,
+            7
+          ],
+          "to": [
+            0,
+            6
+          ],
+          "legal": true,
+          "whyZh": "向左的马腿(1,7)为空",
+          "givesCheck": false,
+          "pieceAfter": "H"
+        },
+        {
+          "from": [
+            2,
+            7
+          ],
+          "to": [
+            4,
+            6
+          ],
+          "legal": true,
+          "whyZh": "向右的马腿(3,7)为空",
+          "givesCheck": false,
+          "pieceAfter": "H"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 9,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "..P......",
+        "..H......",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "09-horse-enemy-leg",
+      "titleZh": "敌子也蹩马腿",
+      "purposeZh": "马不能越过敌方棋子",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "H",
+          2,
+          7
+        ],
+        [
+          "p",
+          2,
+          6
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            2,
+            7
+          ],
+          "to": [
+            1,
+            5
+          ],
+          "legal": false,
+          "whyZh": "黑卒占据马腿(2,6)"
+        },
+        {
+          "from": [
+            2,
+            7
+          ],
+          "to": [
+            3,
+            5
+          ],
+          "legal": false,
+          "whyZh": "黑卒同样封住这一落点"
+        },
+        {
+          "from": [
+            2,
+            7
+          ],
+          "to": [
+            0,
+            6
+          ],
+          "legal": true,
+          "whyZh": "左侧马腿为空",
+          "givesCheck": false,
+          "pieceAfter": "H"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 8,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "..p......",
+        "..H......",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "10-horse-asymmetry",
+      "titleZh": "马能吃到不等于能被吃",
+      "purposeZh": "比较相反方向的马腿，两个马不一定互相攻击",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "H",
+          2,
+          5
+        ],
+        [
+          "h",
+          3,
+          3
+        ],
+        [
+          "c",
+          3,
+          4
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            3,
+            3
+          ],
+          "legal": true,
+          "whyZh": "红马的马腿(2,4)为空",
+          "givesCheck": false,
+          "pieceAfter": "H"
+        },
+        {
+          "from": [
+            3,
+            3
+          ],
+          "to": [
+            2,
+            5
+          ],
+          "legal": false,
+          "whyZh": "假设轮黑走，黑马腿(3,4)被黑炮挡住",
+          "side": "black"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 11,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        "...h.....",
+        "...c.....",
+        "..H......",
+        ".........",
+        ".........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "11-rook-open",
+      "titleZh": "车走直线",
+      "purposeZh": "横竖远行，不能斜走或越界",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "R",
+          0,
+          7
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            0,
+            7
+          ],
+          "to": [
+            0,
+            0
+          ],
+          "legal": true,
+          "whyZh": "整条纵线畅通",
+          "givesCheck": true,
+          "pieceAfter": "R"
+        },
+        {
+          "from": [
+            0,
+            7
+          ],
+          "to": [
+            8,
+            7
+          ],
+          "legal": true,
+          "whyZh": "整条横线畅通",
+          "givesCheck": false,
+          "pieceAfter": "R"
+        },
+        {
+          "from": [
+            0,
+            7
+          ],
+          "to": [
+            2,
+            5
+          ],
+          "legal": false,
+          "whyZh": "车不能斜走"
+        },
+        {
+          "from": [
+            0,
+            7
+          ],
+          "to": [
+            0,
+            10
+          ],
+          "legal": false,
+          "whyZh": "目的地超出棋盘"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 19,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "R........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "12-rook-friendly-block",
+      "titleZh": "车不能穿过己子",
+      "purposeZh": "阻挡与不能吃己方子",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "R",
+          0,
+          7
+        ],
+        [
+          "P",
+          0,
+          6
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            0,
+            7
+          ],
+          "to": [
+            0,
+            5
+          ],
+          "legal": false,
+          "whyZh": "兵挡住车路"
+        },
+        {
+          "from": [
+            0,
+            7
+          ],
+          "to": [
+            0,
+            6
+          ],
+          "legal": false,
+          "whyZh": "不能吃自己的兵"
+        },
+        {
+          "from": [
+            0,
+            7
+          ],
+          "to": [
+            0,
+            8
+          ],
+          "legal": true,
+          "whyZh": "向后路径空着",
+          "givesCheck": false,
+          "pieceAfter": "R"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 13,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "P........",
+        "R........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "13-rook-first-capture",
+      "titleZh": "车只吃路上第一子",
+      "purposeZh": "可以吃第一个敌子，不能穿子吃后面的子",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "R",
+          1,
+          7
+        ],
+        [
+          "h",
+          1,
+          4
+        ],
+        [
+          "c",
+          1,
+          2
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            4
+          ],
+          "legal": true,
+          "whyZh": "黑马是线上第一枚敌子",
+          "givesCheck": false,
+          "pieceAfter": "R"
+        },
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            2
+          ],
+          "legal": false,
+          "whyZh": "不能越过黑马吃黑炮"
+        },
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            3
+          ],
+          "legal": false,
+          "whyZh": "即使落点空，也不能穿过黑马"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 15,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".c.......",
+        ".........",
+        ".h.......",
+        ".........",
+        ".........",
+        ".R.......",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "14-cannon-quiet",
+      "titleZh": "炮不吃子时像车",
+      "purposeZh": "炮的普通移动不能跳子",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "C",
+          1,
+          7
+        ],
+        [
+          "H",
+          1,
+          5
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            6
+          ],
+          "legal": true,
+          "whyZh": "非吃子直行且没有阻挡",
+          "givesCheck": false,
+          "pieceAfter": "C"
+        },
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            5,
+            7
+          ],
+          "legal": true,
+          "whyZh": "横线畅通",
+          "givesCheck": false,
+          "pieceAfter": "C"
+        },
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            4
+          ],
+          "legal": false,
+          "whyZh": "不能越过己马落到空点"
+        },
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            2,
+            6
+          ],
+          "legal": false,
+          "whyZh": "炮不能斜走"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 19,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".H.......",
+        ".........",
+        ".C.......",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "15-cannon-no-screen",
+      "titleZh": "没有炮架不能吃",
+      "purposeZh": "炮不能像车一样直接吃子",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "C",
+          1,
+          7
+        ],
+        [
+          "r",
+          1,
+          2
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            2
+          ],
+          "legal": false,
+          "whyZh": "炮与黑车之间没有炮架"
+        },
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            3
+          ],
+          "legal": true,
+          "whyZh": "可沿空线走到敌车前方空点",
+          "givesCheck": false,
+          "pieceAfter": "C"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 16,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".r.......",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".C.......",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "16-cannon-friendly-screen",
+      "titleZh": "借己子作炮架",
+      "purposeZh": "吃子时恰好隔一枚己子",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "C",
+          1,
+          7
+        ],
+        [
+          "H",
+          1,
+          5
+        ],
+        [
+          "r",
+          1,
+          2
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            2
+          ],
+          "legal": true,
+          "whyZh": "己马是唯一炮架，目标为敌车",
+          "givesCheck": false,
+          "pieceAfter": "C"
+        },
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            5
+          ],
+          "legal": false,
+          "whyZh": "不能吃自己的马"
+        },
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            6
+          ],
+          "legal": true,
+          "whyZh": "空点普通移动不需炮架",
+          "givesCheck": false,
+          "pieceAfter": "C"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 20,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".r.......",
+        ".........",
+        ".........",
+        ".H.......",
+        ".........",
+        ".C.......",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "17-cannon-enemy-screen",
+      "titleZh": "借敌子作炮架",
+      "purposeZh": "炮架颜色不限，炮架本身不会被吃",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "C",
+          1,
+          7
+        ],
+        [
+          "h",
+          1,
+          5
+        ],
+        [
+          "r",
+          1,
+          2
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            2
+          ],
+          "legal": true,
+          "whyZh": "黑马可以作唯一炮架，吃的是黑车",
+          "givesCheck": false,
+          "pieceAfter": "C"
+        },
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            5
+          ],
+          "legal": false,
+          "whyZh": "吃炮架本身时中间反而没有炮架"
+        },
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            4
+          ],
+          "legal": false,
+          "whyZh": "隔子后不能落到空点"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 14,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".r.......",
+        ".........",
+        ".........",
+        ".h.......",
+        ".........",
+        ".C.......",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "18-cannon-two-screens",
+      "titleZh": "两座炮架太多",
+      "purposeZh": "数清炮与目标之间的棋子数量",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "C",
+          1,
+          7
+        ],
+        [
+          "R",
+          1,
+          5
+        ],
+        [
+          "h",
+          1,
+          3
+        ],
+        [
+          "r",
+          1,
+          1
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            1
+          ],
+          "legal": false,
+          "whyZh": "红车与黑马形成两个阻挡"
+        },
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            3
+          ],
+          "legal": true,
+          "whyZh": "吃黑马时只有红车这一座炮架",
+          "givesCheck": false,
+          "pieceAfter": "C"
+        },
+        {
+          "from": [
+            1,
+            7
+          ],
+          "to": [
+            1,
+            6
+          ],
+          "legal": true,
+          "whyZh": "普通走子仍可进行",
+          "givesCheck": false,
+          "pieceAfter": "C"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 25,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".r.......",
+        ".........",
+        ".h.......",
+        ".........",
+        ".R.......",
+        ".........",
+        ".C.......",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "19-pawn-before-river",
+      "titleZh": "兵未过河只向前",
+      "purposeZh": "一步直进或直吃，无双步无斜吃",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "P",
+          2,
+          5
+        ],
+        [
+          "p",
+          2,
+          4
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            2,
+            4
+          ],
+          "legal": true,
+          "whyZh": "向前一步直吃黑卒并越过河界",
+          "givesCheck": false,
+          "pieceAfter": "P"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            1,
+            5
+          ],
+          "legal": false,
+          "whyZh": "过河前不能横走"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            2,
+            3
+          ],
+          "legal": false,
+          "whyZh": "兵没有首步走两格"
+        },
+        {
+          "from": [
+            2,
+            5
+          ],
+          "to": [
+            3,
+            4
+          ],
+          "legal": false,
+          "whyZh": "兵不斜走、不斜吃"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 3,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        "..p......",
+        "..P......",
+        ".........",
+        ".........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "20-pawn-after-river",
+      "titleZh": "过河兵增加横走",
+      "purposeZh": "过河之后仍然不能后退",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "P",
+          2,
+          4
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            2,
+            4
+          ],
+          "to": [
+            2,
+            3
+          ],
+          "legal": true,
+          "whyZh": "继续前进一步",
+          "givesCheck": false,
+          "pieceAfter": "P"
+        },
+        {
+          "from": [
+            2,
+            4
+          ],
+          "to": [
+            1,
+            4
+          ],
+          "legal": true,
+          "whyZh": "过河兵可以左移一步",
+          "givesCheck": false,
+          "pieceAfter": "P"
+        },
+        {
+          "from": [
+            2,
+            4
+          ],
+          "to": [
+            3,
+            4
+          ],
+          "legal": true,
+          "whyZh": "过河兵可以右移一步",
+          "givesCheck": false,
+          "pieceAfter": "P"
+        },
+        {
+          "from": [
+            2,
+            4
+          ],
+          "to": [
+            2,
+            5
+          ],
+          "legal": false,
+          "whyZh": "过河也不能后退"
+        },
+        {
+          "from": [
+            2,
+            4
+          ],
+          "to": [
+            3,
+            3
+          ],
+          "legal": false,
+          "whyZh": "仍然不能斜走"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 5,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        "..P......",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "21-pawn-last-rank",
+      "titleZh": "到底兵仍是兵",
+      "purposeZh": "到达底线后没有升变，只能左右走",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "P",
+          0,
+          0
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            1,
+            0
+          ],
+          "legal": true,
+          "whyZh": "沿底线横移，棋子仍记作P",
+          "givesCheck": false,
+          "pieceAfter": "P"
+        },
+        {
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            0,
+            1
+          ],
+          "legal": false,
+          "whyZh": "不能从底线倒退"
+        },
+        {
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            0,
+            -1
+          ],
+          "legal": false,
+          "whyZh": "不能走出棋盘"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 3,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "P..k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "22-black-pawn-direction",
+      "titleZh": "黑卒方向相反",
+      "purposeZh": "同一数组坐标里，黑卒向y增大方向前进",
+      "sideToMove": "black",
+      "pieces": [
+        [
+          "K",
+          5,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "p",
+          2,
+          4
+        ],
+        [
+          "p",
+          6,
+          5
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            2,
+            4
+          ],
+          "to": [
+            2,
+            5
+          ],
+          "legal": true,
+          "whyZh": "黑卒向下过河",
+          "givesCheck": false,
+          "pieceAfter": "p"
+        },
+        {
+          "from": [
+            2,
+            4
+          ],
+          "to": [
+            1,
+            4
+          ],
+          "legal": false,
+          "whyZh": "当前尚未过河不能横走"
+        },
+        {
+          "from": [
+            2,
+            4
+          ],
+          "to": [
+            2,
+            3
+          ],
+          "legal": false,
+          "whyZh": "这是黑卒后退"
+        },
+        {
+          "from": [
+            6,
+            5
+          ],
+          "to": [
+            5,
+            5
+          ],
+          "legal": true,
+          "whyZh": "这枚黑卒已经过河，可以横移",
+          "givesCheck": false,
+          "pieceAfter": "p"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 6,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        "..p......",
+        "......p..",
+        ".........",
+        ".........",
+        ".........",
+        ".....K..."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "23-facing-generals",
+      "titleZh": "不能露出将帅照面",
+      "purposeZh": "过河兵被将帅同线关系牵制",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          4,
+          0
+        ],
+        [
+          "P",
+          4,
+          4
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            4,
+            4
+          ],
+          "to": [
+            3,
+            4
+          ],
+          "legal": false,
+          "whyZh": "移开唯一遮挡会将帅照面"
+        },
+        {
+          "from": [
+            4,
+            4
+          ],
+          "to": [
+            4,
+            3
+          ],
+          "legal": true,
+          "whyZh": "前进后仍挡住将帅同线",
+          "givesCheck": false,
+          "pieceAfter": "P"
+        },
+        {
+          "from": [
+            4,
+            9
+          ],
+          "to": [
+            5,
+            9
+          ],
+          "legal": true,
+          "whyZh": "帅侧移后不再与将同线",
+          "givesCheck": false,
+          "pieceAfter": "K"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 4,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "....k....",
+        ".........",
+        ".........",
+        ".........",
+        "....P....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "24-rook-absolute-pin",
+      "titleZh": "合法形状不等于合法着法",
+      "purposeZh": "挪开挡子会让己方帅受车将军",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "r",
+          4,
+          1
+        ],
+        [
+          "R",
+          4,
+          7
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            4,
+            7
+          ],
+          "to": [
+            5,
+            7
+          ],
+          "legal": false,
+          "whyZh": "横移会暴露己帅"
+        },
+        {
+          "from": [
+            4,
+            7
+          ],
+          "to": [
+            4,
+            5
+          ],
+          "legal": true,
+          "whyZh": "仍挡在黑车与己帅之间",
+          "givesCheck": false,
+          "pieceAfter": "R"
+        },
+        {
+          "from": [
+            4,
+            7
+          ],
+          "to": [
+            4,
+            1
+          ],
+          "legal": true,
+          "whyZh": "可以沿直线吃掉攻击车",
+          "givesCheck": false,
+          "pieceAfter": "R"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 9,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        "....r....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "....R....",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "25-general-unsafe-square",
+      "titleZh": "帅不能走进攻击",
+      "purposeZh": "检查移动后的目的地是否安全",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "r",
+          5,
+          4
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            4,
+            9
+          ],
+          "to": [
+            5,
+            9
+          ],
+          "legal": false,
+          "whyZh": "该点被黑车纵向控制"
+        },
+        {
+          "from": [
+            4,
+            9
+          ],
+          "to": [
+            4,
+            8
+          ],
+          "legal": true,
+          "whyZh": "这一点没有受到攻击",
+          "givesCheck": false,
+          "pieceAfter": "K"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "ongoing",
+        "legalMoveCount": 1,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".....r...",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "26-block-rook-check",
+      "titleZh": "垫子解车将",
+      "purposeZh": "正在被将军时不能走无关着法",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "r",
+          4,
+          4
+        ],
+        [
+          "R",
+          0,
+          7
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            0,
+            7
+          ],
+          "to": [
+            4,
+            7
+          ],
+          "legal": true,
+          "whyZh": "车移入攻击线，挡住黑车",
+          "givesCheck": false,
+          "pieceAfter": "R"
+        },
+        {
+          "from": [
+            0,
+            7
+          ],
+          "to": [
+            0,
+            6
+          ],
+          "legal": false,
+          "whyZh": "没有解除正在发生的将军"
+        },
+        {
+          "from": [
+            4,
+            9
+          ],
+          "to": [
+            5,
+            9
+          ],
+          "legal": true,
+          "whyZh": "帅也可以走到安全点",
+          "givesCheck": false,
+          "pieceAfter": "K"
+        }
+      ],
+      "expected": {
+        "inCheck": true,
+        "status": "ongoing",
+        "legalMoveCount": 2,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        "....r....",
+        ".........",
+        ".........",
+        "R........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "27-remove-cannon-screen",
+      "titleZh": "撤掉炮架解将",
+      "purposeZh": "移走己方炮架能消除敌炮的攻击",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "c",
+          4,
+          3
+        ],
+        [
+          "R",
+          4,
+          6
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            4,
+            6
+          ],
+          "to": [
+            5,
+            6
+          ],
+          "legal": true,
+          "whyZh": "炮架移开，黑炮不能无架将军",
+          "givesCheck": false,
+          "pieceAfter": "R"
+        },
+        {
+          "from": [
+            4,
+            6
+          ],
+          "to": [
+            4,
+            7
+          ],
+          "legal": false,
+          "whyZh": "仍留下一个炮架，未能解将"
+        },
+        {
+          "from": [
+            4,
+            6
+          ],
+          "to": [
+            4,
+            3
+          ],
+          "legal": true,
+          "whyZh": "也可以直接吃掉将军的黑炮",
+          "givesCheck": false,
+          "pieceAfter": "R"
+        }
+      ],
+      "expected": {
+        "inCheck": true,
+        "status": "ongoing",
+        "legalMoveCount": 10,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        "....c....",
+        ".........",
+        ".........",
+        "....R....",
+        ".........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "28-block-horse-check",
+      "titleZh": "蹩马腿解将",
+      "purposeZh": "不用吃马，也可以阻断马的攻击",
+      "sideToMove": "red",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          3,
+          0
+        ],
+        [
+          "h",
+          3,
+          7
+        ],
+        [
+          "R",
+          0,
+          8
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            0,
+            8
+          ],
+          "to": [
+            3,
+            8
+          ],
+          "legal": true,
+          "whyZh": "车占据黑马到帅之间的马腿",
+          "givesCheck": false,
+          "pieceAfter": "R"
+        },
+        {
+          "from": [
+            0,
+            8
+          ],
+          "to": [
+            2,
+            8
+          ],
+          "legal": false,
+          "whyZh": "没有挡到正确的马腿，仍受将军"
+        }
+      ],
+      "expected": {
+        "inCheck": true,
+        "status": "ongoing",
+        "legalMoveCount": 4,
+        "winner": null
+      },
+      "composed": true,
+      "board": [
+        "...k.....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "...h.....",
+        "R........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "29-checkmate",
+      "titleZh": "被将军且无路可走",
+      "purposeZh": "终局检测：无合法着法且正在受将军",
+      "sideToMove": "black",
+      "pieces": [
+        [
+          "K",
+          4,
+          9
+        ],
+        [
+          "k",
+          4,
+          0
+        ],
+        [
+          "R",
+          0,
+          0
+        ],
+        [
+          "R",
+          4,
+          1
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            4,
+            0
+          ],
+          "to": [
+            3,
+            0
+          ],
+          "legal": false,
+          "whyZh": "被横向红车控制"
+        },
+        {
+          "from": [
+            4,
+            0
+          ],
+          "to": [
+            5,
+            0
+          ],
+          "legal": false,
+          "whyZh": "原将位腾空后仍被横向红车控制"
+        },
+        {
+          "from": [
+            4,
+            0
+          ],
+          "to": [
+            4,
+            1
+          ],
+          "legal": false,
+          "whyZh": "吃掉红车会与红帅照面"
+        }
+      ],
+      "expected": {
+        "inCheck": true,
+        "status": "checkmate",
+        "legalMoveCount": 0,
+        "winner": "red"
+      },
+      "composed": true,
+      "board": [
+        "R...k....",
+        "....R....",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        "....K...."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    },
+    {
+      "id": "30-stalemate",
+      "titleZh": "困毙也是输棋",
+      "purposeZh": "终局检测：没被将军但没有合法着法仍判负",
+      "sideToMove": "black",
+      "pieces": [
+        [
+          "K",
+          5,
+          9
+        ],
+        [
+          "k",
+          4,
+          0
+        ],
+        [
+          "R",
+          3,
+          1
+        ],
+        [
+          "R",
+          5,
+          1
+        ]
+      ],
+      "focus": [],
+      "criticalMoves": [
+        {
+          "from": [
+            4,
+            0
+          ],
+          "to": [
+            3,
+            0
+          ],
+          "legal": false,
+          "whyZh": "左侧点被红车控制"
+        },
+        {
+          "from": [
+            4,
+            0
+          ],
+          "to": [
+            5,
+            0
+          ],
+          "legal": false,
+          "whyZh": "右侧点被另一红车控制"
+        },
+        {
+          "from": [
+            4,
+            0
+          ],
+          "to": [
+            4,
+            1
+          ],
+          "legal": false,
+          "whyZh": "下方点被两车所在横线控制"
+        }
+      ],
+      "expected": {
+        "inCheck": false,
+        "status": "stalemate",
+        "legalMoveCount": 0,
+        "winner": "red"
+      },
+      "composed": true,
+      "board": [
+        "....k....",
+        "...R.R...",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".........",
+        ".....K..."
+      ],
+      "validation": {
+        "criticalAssertions": "passed",
+        "initialGeneralSafety": "passed",
+        "historicalReachability": "not proved; original educational composition"
+      }
+    }
+  ],
+  "validationSummary": {
+    "fixtureCount": 30,
+    "criticalMoveAssertions": 103,
+    "allPassed": true,
+    "validator": "build_fixtures.py independent reference rules used to verify these expectations; not a second certified engine"
+  }
+}

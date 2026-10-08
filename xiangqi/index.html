@@ -1,0 +1,11 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="用真实棋局和 Python 练习，从象棋规则走到 minimax 与 alpha-beta 搜索。私有学习实验室。"><title>中国象棋 AI 编程闯关实验室</title><link rel="stylesheet" href="./style.css"></head><body><div id="app"><p class="boot">正在准备象棋实验室…</p></div><script>
+(() => {
+  const app=document.getElementById('app');
+  const fail=() => {
+    app.innerHTML='<main class="workspace" role="alert"><h1>实验室暂未加载</h1><p>运行文件加载失败或启动等待超过20秒。请重新加载。</p><button id="retry-boot">重新加载</button><p>浏览器中的原学习记录仍保留。</p></main>';
+    document.getElementById('retry-boot').onclick=()=>location.reload();
+  };
+  const timer=setTimeout(()=>{window.xiangqiBootExpired=true;fail()},20000);
+  import('./app.js').then(()=>clearTimeout(timer)).catch(()=>{clearTimeout(timer);fail()});
+})();
+</script><noscript><p>需要启用JavaScript才能运行本地课程；原学习记录不会被此页面更改。</p></noscript></body></html>

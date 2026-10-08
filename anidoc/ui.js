@@ -1,0 +1,18 @@
+export const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export const fmt=(x,d=3)=>!Number.isFinite(x)?'数值无效':Math.abs(x)>=1e5?x.toExponential(2):Number(x.toFixed(d)).toString();
+export function matrix(A,title,{buttons=false,row=-1}={}){return `<div class="matrix-block"><h4>${title}</h4><table class="matrix"><tbody>${A.map((r,i)=>`<tr class="${i===row?'selected':''}">${r.map((x,j)=>`<td>${buttons?`<button data-action="query" data-row="${i}" aria-label="选查询第 ${i+1} 行">${fmt(x)}</button>`:fmt(x)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;}
+export function chart(series,{title='计算结果',xmin=-2,xmax=2,ymin=-2,ymax=2,xlabel='输入 x',ylabel='输出 y',residuals=[]}={}){
+  const W=620,H=290,L=57,R=18,T=25,B=45,px=x=>L+(x-xmin)/(xmax-xmin)*(W-L-R),py=y=>H-B-(y-ymin)/(ymax-ymin)*(H-T-B);
+  const colors=['#216e64','#d27a37','#6371ad','#714e7d'];
+  // The current experiments have at most five curves. Preserve a distinct
+  // non-color pattern for each, including samples 1 and 5 with the same color.
+  const patterns=['','7 3','2 3','10 3 2 3','10 3 2 3 2 3'];
+  const dash=k=>patterns[k%patterns.length]?`stroke-dasharray="${patterns[k%patterns.length]}"`:'';
+  let grid='';for(let i=0;i<=4;i++){const x=xmin+(xmax-xmin)*i/4,y=ymin+(ymax-ymin)*i/4;grid+=`<path class="grid" d="M ${L} ${py(y)} H ${W-R} M ${px(x)} ${T} V ${H-B}"/><text x="${L-8}" y="${py(y)+4}" text-anchor="end">${fmt(y,2)}</text><text x="${px(x)}" y="${H-B+18}" text-anchor="middle">${fmt(x,2)}</text>`;}
+  const point=(s,c,x,y)=>s.diamond?`<path d="M ${x} ${y-4} l 4 4 -4 4 -4 -4 z" fill="white" stroke="${c}"/>`:`<circle cx="${x}" cy="${y}" r="3.5" fill="${c}"/>`;
+  return `<figure class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}"><title>${esc(title)}</title><desc>${series.map(s=>esc(s.name)).join('；')}。各曲线线型对应图例；对应数值表可在图下展开</desc>${grid}${residuals.map(p=>`<path stroke="#858b83" stroke-dasharray="3 3" d="M ${px(p.x)} ${py(p.y)} V ${py(p.pred)}"/>`).join('')}${series.map((s,k)=>{const c=colors[k%colors.length];return s.points?s.data.map(([x,y])=>point(s,c,px(x),py(y))).join(''):`<path d="${s.data.map(([x,y],i)=>`${i?'L':'M'} ${px(x)} ${py(y)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="2.6" ${dash(k)}/>`;}).join('')}<text x="${W/2}" y="${H-5}" text-anchor="middle">${esc(xlabel)}</text><text x="14" y="${H/2}" transform="rotate(-90 14 ${H/2})" text-anchor="middle">${esc(ylabel)}</text></svg><figcaption>${series.map((s,k)=>{const c=colors[k%colors.length];return `<span><svg class="legend-symbol" viewBox="0 0 46 14" aria-hidden="true" focusable="false">${s.points?point(s,c,23,7):`<path d="M 1 7 H 45" fill="none" stroke="${c}" stroke-width="2.6" ${dash(k)}/>`}</svg>${esc(s.name)}</span>`;}).join('')}</figcaption></figure>`;
+}
+export const control=(label,key,val,min,max,step=1)=>`<label class="control">${label}<strong data-readout="${key}">${fmt(val)}</strong><input data-lab="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${val}" aria-label="${label}"><small>范围 ${min} 到 ${max}，步长 ${step}</small></label>`;
+export const select=(label,key,val,options)=>`<label class="control">${label}<select data-lab="${key}">${options.map(([v,t])=>`<option value="${v}" ${String(v)===String(val)?'selected':''}>${t}</option>`).join('')}</select></label>`;
+export const buttons=lab=>`<div class="actions"><button data-action="step" data-kind="${lab}">单步</button><button data-action="run" data-kind="${lab}">运行</button><button data-action="pause">暂停</button><button data-action="reset" data-kind="${lab}" class="quiet">重置实验</button></div>`;
+export const metric=(label,val)=>`<div class="metric"><small>${label}</small><strong>${val}</strong></div>`;
